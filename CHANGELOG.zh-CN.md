@@ -14,6 +14,12 @@
 
 - 清空已发布公告，客户端成功刷新后不再显示旧公告或自动弹出公告。
 
+## [1.3.75] - 2026-10-26
+
+### 新增
+
+- 官方 Codex Responses 请求默认附加 `x-openai-account-routing-override: us_cr`；设置 `COCKPIT_CODEX_ACCOUNT_ROUTING_OVERRIDE` 后可按进程关闭该请求头。
+
 ## [1.3.74] - 2026-10-24
 
 ### 修复

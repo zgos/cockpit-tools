@@ -14,6 +14,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Clear all published announcements so old notices and automatic announcement popups disappear after a successful client refresh.
 
+## [1.3.75] - 2026-10-26
+
+### Added
+
+- Add the default `x-openai-account-routing-override: us_cr` header to official Codex Responses requests, with `COCKPIT_CODEX_ACCOUNT_ROUTING_OVERRIDE` available as a process-level disable switch.
+
 ## [1.3.74] - 2026-10-24
 
 ### Fixed
