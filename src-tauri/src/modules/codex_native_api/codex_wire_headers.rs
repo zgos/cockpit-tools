@@ -4,6 +4,9 @@ use axum::http::{HeaderMap, HeaderValue};
 use serde_json::Value;
 
 const ROUTING_HINT: &str = "x-codex-routing-hint";
+const ACCOUNT_ROUTING_OVERRIDE: &str = "x-openai-account-routing-override";
+const ACCOUNT_ROUTING_OVERRIDE_ENV: &str = "COCKPIT_CODEX_ACCOUNT_ROUTING_OVERRIDE";
+const SUPPORTED_ACCOUNT_ROUTING_OVERRIDE: &str = "us_cr";
 
 pub(crate) fn finalize_routing_hint(
     headers: &mut HeaderMap,
@@ -51,6 +54,28 @@ pub(crate) fn finalize_routing_hint(
     })?;
     headers.insert(ROUTING_HINT, value);
     Ok(())
+}
+
+/// Apply the account routing override only to the official Codex backend. The
+/// downstream caller cannot supply this internal header. `us_cr` is the
+/// default; setting `COCKPIT_CODEX_ACCOUNT_ROUTING_OVERRIDE` disables it.
+pub(crate) fn apply_account_routing_override(
+    headers: &mut HeaderMap,
+    chatgpt_backend: bool,
+    disabled: bool,
+) {
+    headers.remove(ACCOUNT_ROUTING_OVERRIDE);
+    if !chatgpt_backend || disabled {
+        return;
+    }
+    headers.insert(
+        ACCOUNT_ROUTING_OVERRIDE,
+        HeaderValue::from_static(SUPPORTED_ACCOUNT_ROUTING_OVERRIDE),
+    );
+}
+
+pub(crate) fn account_routing_override_disabled() -> bool {
+    std::env::var_os(ACCOUNT_ROUTING_OVERRIDE_ENV).is_some()
 }
 
 #[cfg(test)]
@@ -135,6 +160,28 @@ mod tests {
         finalize_routing_hint(&mut headers, &json!({"model":" "}), true, &HeaderMap::new())
             .unwrap();
         assert!(!headers.contains_key(ROUTING_HINT));
+    }
+
+    #[test]
+    fn account_routing_override_defaults_to_us_cr_and_can_be_disabled() {
+        let mut headers = HeaderMap::from_iter([(
+            ACCOUNT_ROUTING_OVERRIDE.parse().unwrap(),
+            HeaderValue::from_static("caller-controlled"),
+        )]);
+        apply_account_routing_override(&mut headers, false, false);
+        assert!(!headers.contains_key(ACCOUNT_ROUTING_OVERRIDE));
+
+        headers.insert(
+            ACCOUNT_ROUTING_OVERRIDE,
+            HeaderValue::from_static("caller-controlled"),
+        );
+        apply_account_routing_override(&mut headers, true, false);
+        assert_eq!(
+            headers[ACCOUNT_ROUTING_OVERRIDE],
+            SUPPORTED_ACCOUNT_ROUTING_OVERRIDE
+        );
+        apply_account_routing_override(&mut headers, true, true);
+        assert!(!headers.contains_key(ACCOUNT_ROUTING_OVERRIDE));
     }
 
     #[test]

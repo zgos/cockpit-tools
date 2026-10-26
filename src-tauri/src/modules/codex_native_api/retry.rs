@@ -234,6 +234,13 @@ async fn send_inner(
         super::codex_wire::finalize_routing_hint(
             &mut headers, &body, codex_backend && !prepared.route.chatgpt_plan, &prepared.route.headers,
         )?;
+        let account_routing_override_disabled =
+            super::codex_wire::account_routing_override_disabled();
+        super::codex_wire::apply_account_routing_override(
+            &mut headers,
+            codex_backend,
+            account_routing_override_disabled,
+        );
         prepared.multi_agent_context.capture_final(&body);
         prepared.binding.retain_transmitted_input_blobs(&body);
         let base_url = endpoint.as_ref().map_or(prepared.route.base_url.as_str(), |endpoint| {

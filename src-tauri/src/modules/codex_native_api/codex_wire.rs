@@ -12,7 +12,9 @@ mod final_headers;
 mod lite;
 #[path = "codex_wire_schema.rs"]
 mod schema;
-pub(super) use final_headers::finalize_routing_hint;
+pub(super) use final_headers::{
+    account_routing_override_disabled, apply_account_routing_override, finalize_routing_hint,
+};
 
 pub(super) const LITE_HEADER: &str = "x-openai-internal-codex-responses-lite";
 
